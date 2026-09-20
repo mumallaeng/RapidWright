@@ -138,6 +138,54 @@ tasks.withType(Test) {
   finalizedBy remindSubmodules
 }
 
+// Run the examples as smoke tests, since CI otherwise only compiles them.
+// Args are closures because some point into the RapidWrightDCP submodule.
+// That submodule is only initialized once the task graph runs.
+ext.exampleRuns = [
+  [name: 'Lesson1'],
+  [name: 'CustomRouting'],
+  [name: 'DecomposeLUT'],
+  [name: 'ExampleNetlistCreation'],
+  [name: 'AddSubGenerator'],
+  [name: 'CounterGenerator'],
+  [name: 'MultGenerator'],
+  [name: 'PipelineGenerator'],
+  [name: 'SLRCrosserGenerator'],
+  [name: 'PipelineGeneratorWithRouting'],
+  [name: 'PolynomialGenerator', args: { -> ['x^2+3*x+5', '16'] }],
+  [name: 'CountRoutedNets', args: { -> [file('test/RapidWrightDCP/picoblaze_ooc_X10Y235.dcp').toString()] }],
+  [name: 'FindBlackBoxes', args: { -> [file('test/RapidWrightDCP/picoblaze_ooc_X10Y235.dcp').toString()] }],
+  [name: 'ReportTimingExample', args: { -> [file('test/RapidWrightDCP/picoblaze_ooc_X10Y235.dcp').toString()] }],
+  [name: 'PrintEDIFInstances', args: { -> [file('test/RapidWrightDCP/duplicateCellNames.edf').toString(), 'instnames.txt'] }],
+]
+
+def exampleTasks = ext.exampleRuns.collect { ex ->
+  tasks.register("runExample${ex.name}", JavaExec) {
+    group = "verification"
+    description = "Run the ${ex.name} example as a smoke test"
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = "com.xilinx.rapidwright.examples.${ex.name}"
+    def exWorkingDir = file("${buildDir}/examples/${ex.name}")
+    workingDir = exWorkingDir
+    // Without this, FileTools.getRapidWrightPath() falls back to build/classes/java.
+    // Examples using the timing model then can't find the repo's timing data directory.
+    environment 'RAPIDWRIGHT_PATH', projectDir.toString()
+    dependsOn initSubmodules
+    doFirst {
+      project.mkdir(exWorkingDir)
+      if (ex.args) {
+        args = ex.args.call()
+      }
+    }
+  }
+}
+
+task runExamples {
+  group = "verification"
+  description = "Run all example programs in src/com/xilinx/rapidwright/examples as smoke tests"
+  dependsOn exampleTasks
+}
+
 task testJar(type: Jar) {
     archiveClassifier = 'tests'
     from sourceSets.test.output
