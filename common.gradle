@@ -141,6 +141,8 @@ tasks.withType(Test) {
 // Run the examples as smoke tests, since CI otherwise only compiles them.
 // Args are closures because some point into the RapidWrightDCP submodule.
 // That submodule is only initialized once the task graph runs.
+def rwDcp = { String name -> file("test/RapidWrightDCP/${name}").toString() }
+
 ext.exampleRuns = [
   [name: 'Lesson1'],
   [name: 'CustomRouting'],
@@ -153,10 +155,13 @@ ext.exampleRuns = [
   [name: 'SLRCrosserGenerator'],
   [name: 'PipelineGeneratorWithRouting'],
   [name: 'PolynomialGenerator', args: { -> ['x^2+3*x+5', '16'] }],
-  [name: 'CountRoutedNets', args: { -> [file('test/RapidWrightDCP/picoblaze_ooc_X10Y235.dcp').toString()] }],
-  [name: 'FindBlackBoxes', args: { -> [file('test/RapidWrightDCP/picoblaze_ooc_X10Y235.dcp').toString()] }],
-  [name: 'ReportTimingExample', args: { -> [file('test/RapidWrightDCP/picoblaze_ooc_X10Y235.dcp').toString()] }],
-  [name: 'PrintEDIFInstances', args: { -> [file('test/RapidWrightDCP/duplicateCellNames.edf').toString(), 'instnames.txt'] }],
+  [name: 'CountRoutedNets', args: { -> [rwDcp('picoblaze_ooc_X10Y235.dcp')] }],
+  [name: 'FindBlackBoxes', args: { -> [rwDcp('picoblaze_ooc_X10Y235.dcp')] }],
+  [name: 'ReportTimingExample', args: { -> [rwDcp('picoblaze_ooc_X10Y235.dcp')] }],
+  [name: 'PrintEDIFInstances', args: { -> [rwDcp('duplicateCellNames.edf'), 'instnames.txt'] }],
+  [name: 'PartRetargeter', args: { -> [rwDcp('picoblaze_ooc_X10Y235.dcp'), 'retargeted.dcp', 'xcvu9p-flgb2104-2-i', '0'] }],
+  [name: 'RelocateHierarchy', args: { -> [rwDcp('picoblaze_ooc_X10Y235.dcp'), '', '0', '5', 'relocated.dcp'] }],
+  [name: 'PicoBlazeArray', args: { -> [rwDcp('PicoBlazeArray'), 'xcvu3p-ffvc1517-2-i', 'picoblaze_array.dcp', '--no_hand_placer'] }],
 ]
 
 def exampleTasks = ext.exampleRuns.collect { ex ->
