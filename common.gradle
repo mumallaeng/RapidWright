@@ -170,6 +170,7 @@ def exampleTasks = ext.exampleRuns.collect { ex ->
     description = "Run the ${ex.name} example as a smoke test"
     classpath = sourceSets.main.runtimeClasspath
     mainClass = "com.xilinx.rapidwright.examples.${ex.name}"
+    jvmArgs application.applicationDefaultJvmArgs
     def exWorkingDir = file("${buildDir}/examples/${ex.name}")
     workingDir = exWorkingDir
     // Without this, FileTools.getRapidWrightPath() falls back to build/classes/java.
@@ -187,7 +188,7 @@ def exampleTasks = ext.exampleRuns.collect { ex ->
 
 task runExamples {
   group = "verification"
-  description = "Run all example programs in src/com/xilinx/rapidwright/examples as smoke tests"
+  description = "Run the examples listed in exampleRuns as smoke tests"
   dependsOn exampleTasks
 }
 
